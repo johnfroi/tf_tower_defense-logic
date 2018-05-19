@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    </head>
+    <style>
+        body{
+            margin: 0px;
+        }
+        #div{
+            width: 1200px;
+            height: 600px;
+            margin-top: 10px;
+            background-image: url(stage1.png);
+            box-shadow: 0px 0px 3px black;
+        }
+    </style>
+    <center>
+         <div id="div">
+            <canvas width="1200" height="600" id="can"></canvas>
+        </div>
+    </center>
+</html>
+<script>
+    //path the will with move across all of this the. you can see that there is dot green
+    var path=[{xpos:20,ypos:380},
+              {xpos:460,ypos:370},
+              {xpos:500,ypos:370},
+              {xpos:530,ypos:340},
+              {xpos:570,ypos:230},
+			  {xpos:585,ypos:190},
+			  {xpos:620,ypos:155},
+			  {xpos:660,ypos:140},
+			  {xpos:720,ypos:135},
+			  {xpos:760,ypos:148},
+			  {xpos:790,ypos:188},
+			  {xpos:815,ypos:308},
+			  {xpos:825,ypos:440},
+			  {xpos:840,ypos:480},
+			  {xpos:870,ypos:500},
+			  {xpos:1205,ypos:500}
+             ];
+    //weapon play that is a big squares. where  we player all of our weapons
+    var weapon_place=[
+            {xpos:120,ypos:280,taken:false,rot:90*(Math.PI/180)},
+            {xpos:320,ypos:440,taken:false,rot:240*(Math.PI/180)},
+            {xpos:600,ypos:320,taken:false,rot:0*(Math.PI/180)},
+            {xpos:690,ypos:200,taken:false,rot:0*(Math.PI/180)},
+            {xpos:890,ypos:410,taken:false,rot:0*(Math.PI/180)}
+    ];
+    //image of weapon 1
+    var wep1_img=new Image();
+    wep1_img.src="weapon1.png";
+    //enemy object
+	function enemy1(idz){
+        this.id="id"+idz;
+		this.ypos=380;
+		this.xpos=0;
+		this.w=10;
+		this.h=10;
+		this.path_path=0;
+		this.sped=0.9;
+        this.life=5;
+        this.damage=1;
+        //draw function this function will display and move the enenmy
+		this.draw=function(){
+            //calculate subtract the position of path and theis object position
+            //the path_path is the index of array
+			var x=path[this.path_path].xpos-(this.xpos+(this.w/2));
+			var y=path[this.path_path].ypos-(this.ypos+(this.h/2));
+            //then get the distance of enemy and path. that we store in array
+			var dis=Math.sqrt(y*y+x*x);
+            //then divide the distance of this enemy and path 
+			var s=dis/this.sped;
+            //then we get the speed x of the enemy and speed y of the enemy when see to the game that enemy direction is moving to path
+			var sx=x/s;
+			var sy=y/s;
+            //then get the rotation of enemy and path Math.atan2 return a value of radiant if you to see  the rotation in degree you can use this equation Math.atan2(y,x)*(180/Math.PI);
+			var rot=Math.atan2(y,x);
+            //then draw the object
+            //we put save() and restore to make tranlate and rotate effective only the the statement between them
+			game.draw.save();
+				game.draw.translate(this.xpos+(this.w/2),this.ypos+(this.h/2));
+				game.draw.rotate(rot);
+				game.draw.fillStyle="#333333";
+                //in this we divide the width and height of the enemy to make out rotaion in the center position
+				game.draw.fillRect((this.w/2)*-1,(this.w/2)*-1,this.w,this.h);
+			game.draw.restore();
+            //then we change the position of the enemy to make a moving effect
+			this.xpos+=sx;
+			this.ypos+=sy;
+            //when the enemy reach the first path then the path will increment to make the enemy move to another path
+            //until it reach to the last path
+			if(dis<4){
+				this.path_path++;
+			}
+            this.lifebar();
+		}
+        this.lifebar=function(){
+            var percent=this.life/5; 
+            var len=percent*15;
+            game.draw.save();
+				game.draw.translate(this.xpos-5 ,this.ypos-6);
+				game.draw.fillStyle="red";
+                //in this we divide the width and height of the enemy to make out rotaion in the center position
+				game.draw.fillRect(0,0,len,2);
+			game.draw.restore();
+        }
+	}
+    function weapon1bullet(x,y,id,damage){
+        this.xpos=x;
+        this.ypos=y;
+        this.place={x:0,y:0};
+        this.target_id=id;
+        this.speedx=0;
+        this.speedy=0;
+        this.dis=0;
+        this.en_index=0;
+        this.damage=damage;
+        this.enemy_ishit=false;
+        this.draw=function(i){
+            var target=false;
+            var ang_index=0;
+            this.enemy_ishit=false;
+            for(var i=0;i<enemy.length;i++){
+                if(enemy[i].id==this.target_id){
+                    target=true;
+                    this.place.x=enemy[i].xpos;
+                    this.place.y=enemy[i].ypos;
+                    ang_index=i;
+                    break;
+                }
+            }
+            if(target==true){
+                var tx=(enemy[ang_index].xpos+(enemy[ang_index].w/2))-this.xpos;
+                var ty=(enemy[ang_index].ypos+(enemy[ang_index].h/2))-this.ypos;
+                var dis=Math.sqrt(ty*ty+tx*tx);
+                var sped=dis/4;
+                this.speedx=tx/sped;
+                this.speedy=ty/sped;
+                if(dis>3){
+                }
+                this.en_index=ang_index;
+                this.dis=dis;
+                this.enemy_ishit=true;
+            }
+            else{
+                var tx=this.place.x-this.xpos;
+                var ty=this.place.y-this.ypos;
+                var dis=Math.sqrt(ty*ty+tx*tx);
+                var sped=dis/4;
+                this.speedx=tx/sped;
+                this.speedy=ty/sped;
+                this.dis=dis;
+            }
+            game.draw.fillStyle="#ff0000";
+            game.draw.fillRect(this.xpos,this.ypos,3,3);
+            this.xpos+=this.speedx;
+            this.ypos+=this.speedy;
+        }
+    }
+    function weapon1(x,y,r){
+		this.w=40;
+		this.h=40;
+        this.ypos=y;
+		this.xpos=x;
+        this.rot=r;
+        this.targetlock=false;
+        this.target_id="";
+        this.range=100;
+        this.place={x:x,y:y};
+        this.is_shoot=false;
+        this.fire_rate=0.1;
+        this.time_to_shoot=0;
+        this.damage=0.4;
+        this.draw=function(){
+            game.draw.save();
+                game.draw.translate(this.xpos,this.ypos);
+                game.draw.rotate(this.rot);
+                game.draw.drawImage(wep1_img,(this.w/2)*-1,(this.w/2)*-1);
+            game.draw.restore();
+            this.range_();
+            this.get_rotation_();
+            this.recoil();
+        }
+        this.range_=function(){
+            //the range we daw a circle on the weapon to visualize the range of the wepan
+            var rot=0;
+            //this what we need to create a perfect circle
+            var rad=360/30;
+            for(var z=0;z<30;z++){
+                //you can change the value of this.range to make you desired range of the weapon
+                var tx=this.range*Math.cos(rot*(Math.PI/180))+(this.xpos);
+                var ty=this.range*Math.sin(rot*(Math.PI/180))+(this.ypos);
+                game.draw.save();
+                    game.draw.translate(tx+2,ty+2);
+                    game.draw.rotate(rot*(Math.PI/180));
+                    game.draw.fillRect(-2,-2,4,4);
+                game.draw.restore();
+                rot+=rad;
+            }
+        }
+        this.get_rotation_=function(){
+            //this when the enemy is inside that circle we rotate our weapon to that enemy
+            for(var i=0;i<enemy.length;i++){
+                var tx=(enemy[i].xpos+(enemy[i].w/2))-this.xpos;
+                var ty=(enemy[i].ypos+(enemy[i].h/2))-this.ypos;
+                var dis=Math.sqrt(ty*ty+tx*tx);
+                var rot=Math.atan2(ty,tx);
+                /*if(rot<0){
+                    rot=360+rot;
+                   console.log(rot);
+                }*/
+                if(dis<this.range){
+                    if(this.target_id!=enemy[i].id){
+                        this.target_id=enemy[i].id;
+                        this.targetlock=false;
+                    }
+                    if(this.targetlock==false){
+                        if(this.rot>rot){
+                            this.rot-=0.04;
+                            if(this.rot<=rot){
+                                 this.targetlock=true;
+                            }
+                        }
+                        if(this.rot<rot){
+                            this.rot+=0.06;
+                            if(this.rot>=rot){
+                                 this.targetlock=true;
+                            }
+                        }this.rot=rot;
+                    }
+                    else{
+                        this.rot=rot;
+                      /*  game.draw.save();
+                            game.draw.translate(this.xpos,this.ypos,dis,1);
+                            game.draw.rotate(rot);
+                            game.draw.fillStyle="#ffffff";
+                            game.draw.fillRect(-0.5,-0.5,dis,1);
+                        game.draw.restore();*/
+                        this.time_to_shoot+=this.fire_rate;
+                        if(this.time_to_shoot>=5){
+                            this.is_shoot=true;
+                            this.time_to_shoot=0;
+                        }
+                    }
+                    
+                    break;
+                }
+            }
+        }
+        this.sx=0;
+        this.sy=0;
+        this.recoil=function(){
+            var pointx=20*Math.cos(this.rot)+this.xpos;
+            var pointy=20*Math.sin(this.rot)+this.ypos;
+            var pointx2=-4*Math.cos(this.rot)+this.place.x;
+            var pointy2=-4*Math.sin(this.rot)+this.place.y;
+            game.draw.fillRect(pointx,pointy,2,2);
+            if(this.is_shoot==true){
+                this.xpos=pointx2;
+                this.ypos=pointy2;
+                var tx=this.place.x-pointx2;
+                var ty=this.place.y-pointy2;
+                var dis=Math.sqrt(ty*ty+tx*tx);
+                var sped=dis/0.1;
+                this.sx=tx/sped;
+                this.sy=ty/sped;
+                this.is_shoot=false;
+                bullet.push(new weapon1bullet(pointx,pointy,this.target_id,this.damage));
+            }
+            this.xpos+=this.sx;
+            this.ypos+=this.sy;
+            var tx2=this.place.x-this.xpos;
+            var ty2=this.place.y-this.ypos;
+            var dis=Math.sqrt(ty2*ty2+tx2*tx2);
+            if(dis<=2){
+                this.xpos=this.place.x;
+                this.ypos=this.place.y;
+                this.sx=0;
+                this.sy=0;
+            }
+        }
+    }
+    var spawntimer=0;
+	var enemy=[];
+    var game={draw:can.getContext('2d')};
+    var weapon=[];
+    var bullet=[];
+    var en_id=0;
+    
+    enemy.push(new enemy1(en_id));
+    en_id++;
+    function main_(){
+		window.requestAnimationFrame(main_);
+        //spawn time of the enemy we add new enemv every spawntimer is greater than or equal to spawn tim
+        //then we push new enemey into array it meanse we add new enemy to the array enemy
+        spawntimer+=1;
+        if(spawntimer>50){
+            spawntimer=0;
+            //we put a id in enemy for the to make our weapon know that this is my current enemy target :)
+            enemy.push(new enemy1(en_id));
+            //then we increment to make out enemy`s id unique
+            en_id++;
+        }
+        //then we clear the canvas
+        game.draw.clearRect(0,0,1200,600);
+        //we draw all the path in array
+        for(var i=0;i<path.length;i++){
+            game.draw.fillStyle="#00ff00";
+            game.draw.fillRect(path[i].xpos,path[i].ypos,3,3);
+        }
+        
+        for(var i=0;i<bullet.length;i++){
+            bullet[i].draw(i);
+        }
+        for(var i=0;i<bullet.length;i++){
+            if(bullet[i].dis<3){
+                if(bullet[i].enemy_ishit==true){
+                    enemy[bullet[i].en_index].life-=bullet[i].damage;
+                }
+                bullet.splice(i,1);
+            }
+        }
+        //we draw all the enemies in enmy array
+		for(var i=0;i<enemy.length;i++){
+            enemy[i].draw();
+        }
+        for(var i=0;i<enemy.length;i++){
+            if(enemy[i].life<=0){
+                enemy.splice(i,1);
+            }
+        }
+        //then we check if the enemy reach to the last position of the path then we slice it or remove  to array
+        //we don`t do this we get an error because path_path will bre greater than length of path. i think the error will
+        for(var i=0;i<enemy.length;i++){
+            if(enemy[i].path_path==path.length){
+               enemy.splice(i,1);
+            }
+        }
+        //wea call the weapon place function
+        weapon_place_();
+    }
+    //color of the player place
+    var col=["red","yellow","orange","deepskyblue","pink"];
+    function weapon_place_(){
+        //display all the big squares
+        for(var i=0;i<weapon_place.length;i++){
+            game.draw.fillStyle=col[i];
+            game.draw.fillRect(weapon_place[i].xpos,weapon_place[i].ypos,30,30);
+            //weapon
+            if(weapon.length>i){
+                weapon[i].draw();
+            }
+        }
+        //draw all the weapon
+        for(var i=0;i<weapon.length;i++){
+                weapon[i].draw();
+        }
+    }
+    // on mouse down we when we click the canvas we get the position of mousex and mouse y
+    can.onmousedown=function(e){
+        for(var i=0;i<weapon_place.length;i++){
+    //then we minuse the page x to can.offset to get the accuration position of mouse
+    //because read the windows x and y not ony the canvas.
+    //so we get the offset of the canvas in the main window  then we minus it to page x
+        var x=(weapon_place[i].xpos+15)-(e.pageX-can.offsetLeft);
+        var y=(weapon_place[i].ypos+15)-(e.pageY-can.offsetTop);
+    //then we check the distance of out mouse coorditnate on all weapon place 
+    //if the distance is less than 20 it meanse we click inside of those square then we add and a weapon to the square we click
+        var dis=Math.sqrt(y*y+x*x);
+            if(dis<20&&weapon_place[i].taken==false){
+                weapon.push(new weapon1(weapon_place[i].xpos+15,weapon_place[i].ypos+15,weapon_place[i].rot));
+                weapon_place[i].taken=true;
+                break;
+            }
+        } 
+    }
+    window.onload=main_();
+</script>
